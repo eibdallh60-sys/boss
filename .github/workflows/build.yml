@@ -1,0 +1,37 @@
+name: Unzip App and Build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'app/*.zip'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Unzip app archive
+        run: |
+          mkdir -p app/extracted
+          unzip -o app/project.zip -d app/extracted
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Build Android APK
+        run: |
+          cd app/extracted
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-app-apk
+          path: app/extracted/**/build/outputs/apk/debug/*.apk
